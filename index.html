@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OUTCOME MEMORIES — Fan Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik+Glitch&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="#home">
+    <img class="nav-logo-img" src="images/outcomeLOG.png" alt="" onerror="this.style.display='none';">
+    <span class="nav-logo-text">Outcome Memories</span>
+  </a>
+  <div class="nav-links">
+    <a href="#about">About</a>
+    <a href="#tierlist">Tier List</a>
+    <a href="https://www.roblox.com/share?code=2e85b43894d892489f48cb7983b907fb&type=ExperienceDetails&stamp=1785267707280" target="_blank" rel="noopener noreferrer" class="nav-play">Play Now</a>
+  </div>
+</nav>
+
+<!-- ================= HOME VIEW ================= -->
+<div id="view-home">
+
+  <section class="hero full">
+    <img id="hero-banner" class="hero-banner" src="images/banner.png" alt="" onerror="this.style.display='none';">
+    <div class="eyebrow mono">FAN HUB · COMMUNITY-RUN PROJECT</div>
+    <h1><span class="glitch-word" data-text="OUTCOME">OUTCOME</span><br>MEMORIES</h1>
+    <p>An asymmetric survival-horror game on Roblox inspired by Sonic.exe. One player becomes the Executioner — everyone else has to survive and escape through the ring before time runs out.</p>
+    <a class="play-btn" href="https://www.roblox.com/share?code=2e85b43894d892489f48cb7983b907fb&type=ExperienceDetails&stamp=1785267707280" target="_blank" rel="noopener noreferrer">▶ Play on Roblox</a>
+    <div class="scroll-cue"><div class="bar"></div>SCROLL</div>
+  </section>
+
+  <section class="about reveal" id="about">
+    <div class="about-text">
+      <div class="section-tag mono">ABOUT</div>
+      <h2 class="section-title">Executioners vs Survivors. One ring out.</h2>
+      <p>This is a community fan hub for Outcome Memories. Scroll down to drag characters into your own tier ranking — every vote feeds the community Tier List page.</p>
+    </div>
+    <div class="stat-grid">
+      <div class="stat"><div class="num red">4</div><div class="label">Executioners in-game</div></div>
+      <div class="stat"><div class="num gold">1 : 1-7</div><div class="label">Match format</div></div>
+      <div class="stat"><div class="num">S</div><div class="label">Ring to escape</div></div>
+      <div class="stat"><div class="num">24h</div><div class="label">Tier list refresh</div></div>
+    </div>
+  </section>
+
+  <section class="reveal" id="ranking">
+    <div class="section-header-row">
+      <div>
+        <div class="section-tag mono">COMMUNITY VOTE</div>
+        <h2 class="section-title">Rank Them Yourself</h2>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Choose side">
+        <button class="tab-btn active" id="tab-killers" role="tab" aria-selected="true">Executioners</button>
+        <button class="tab-btn" id="tab-survivors" role="tab" aria-selected="false">Survivors</button>
+      </div>
+    </div>
+
+    <div class="status-line mono" id="status-line">Loading votes…</div>
+
+    <p class="rank-hint">Drag a character card into a tier below — that's your vote. Drag it back to "Unplaced" to remove your vote, or drag it to a different tier anytime to change your mind. On touch devices: tap a card to pick it up, then tap a tier to drop it there.</p>
+
+    <div class="pool-zone" id="zone-pool" data-tier="">
+      <div class="pool-label mono">UNPLACED</div>
+    </div>
+
+    <div class="tier-zones" id="tier-zones"></div>
+
+    <div class="timer-row" style="margin-top:26px;">
+      <span class="timer-label mono">TIER LIST PAGE AUTO-UPDATES IN</span>
+      <span class="timer-value mono" id="countdown">--:--:--</span>
+    </div>
+  </section>
+
+  <footer>
+    <div>Outcome Memories — fan project. Not affiliated with the game's developers or SEGA.</div>
+    <div class="mono">v0.1</div>
+  </footer>
+
+</div>
+
+<!-- ================= TIER LIST VIEW (read-only) ================= -->
+<div id="view-tierlist" style="display:none;">
+
+  <section class="hero">
+    <div class="eyebrow mono">READ-ONLY RESULTS</div>
+    <h1 style="font-size:clamp(2rem,6vw,4rem);">Community Tier List</h1>
+    <p>This is the current fixed outcome of everyone's votes. It doesn't move until the next update — go back and vote to help shape the next one.</p>
+  </section>
+
+  <section class="reveal">
+    <div class="section-header-row">
+      <div>
+        <div class="section-tag mono">CURRENT CYCLE</div>
+        <h2 class="section-title">Standings</h2>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Choose side">
+        <button class="tab-btn active" id="tl-tab-killers" role="tab" aria-selected="true">Executioners</button>
+        <button class="tab-btn" id="tl-tab-survivors" role="tab" aria-selected="false">Survivors</button>
+      </div>
+    </div>
+
+    <div class="timer-row">
+      <span class="timer-label mono">NEXT AUTOMATIC UPDATE IN</span>
+      <span class="timer-value mono" id="tl-countdown">--:--:--</span>
+    </div>
+
+    <div class="status-line mono" id="tl-status-line">Loading results…</div>
+
+    <div id="tier-container"></div>
+
+    <a class="back-cta" href="#home">Back to Home</a>
+  </section>
+
+  <footer>
+    <div>Outcome Memories — fan project. Not affiliated with the game's developers or SEGA.</div>
+    <div class="mono">v0.1</div>
+  </footer>
+
+</div>
+
+<script src="data.js"></script>
+<script>
+  function setTheme(theme) {
+    document.documentElement.style.setProperty("--accent", theme.accent);
+    document.documentElement.style.setProperty("--accent-glow", theme.glow);
+  }
+
+  // ============ HOME VIEW: drag & drop voting ============
+  let homeSide = "killers";
+  let selectedChipId = null;
+  const zonePool = document.getElementById("zone-pool");
+  const zonesContainer = document.getElementById("tier-zones");
+  const statusLine = document.getElementById("status-line");
+  const countdownEl = document.getElementById("countdown");
+  const isTouchDevice = ("ontouchstart" in window) || navigator.maxTouchPoints > 0;
+
+  if (!hasStorage) {
+    statusLine.textContent = "Demo mode: no shared storage found, so votes only exist in this open tab and won't be saved. To go live on the internet you'll need a real backend/database.";
+    statusLine.classList.add("warn");
+  }
+
+  function buildZones() {
+    zonesContainer.innerHTML = "";
+    TIER_ORDER.forEach((t) => {
+      const row = document.createElement("div");
+      row.className = "drop-zone";
+      row.dataset.tier = t;
+      row.innerHTML = `<div class="tier-label">${t}<small>TIER</small></div><div class="tier-cards" data-tier="${t}"></div>`;
+      zonesContainer.appendChild(row);
+    });
+    attachZoneEvents();
+  }
+
+  function makeChip(ch) {
+    const chip = document.createElement("div");
+    chip.className = "chip";
+    chip.draggable = !isTouchDevice;
+    chip.dataset.id = ch.id;
+    chip.innerHTML = `${avatarImgHTML(ch, 36)}<span class="chip-name">${ch.name}</span>`;
+    if (!isTouchDevice) {
+      chip.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", ch.id);
+        chip.classList.add("dragging");
+      });
+      chip.addEventListener("dragend", () => chip.classList.remove("dragging"));
+    }
+    chip.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const alreadySelected = chip.classList.contains("selected");
+      document.querySelectorAll(".chip.selected").forEach((c) => c.classList.remove("selected"));
+      selectedChipId = alreadySelected ? null : ch.id;
+      if (!alreadySelected) chip.classList.add("selected");
+    });
+    return chip;
+  }
+
+  function attachZoneEvents() {
+    const allZones = [zonePool, ...document.querySelectorAll(".drop-zone")];
+    allZones.forEach((zoneEl) => {
+      zoneEl.addEventListener("dragover", (e) => { e.preventDefault(); zoneEl.classList.add("dragover"); });
+      zoneEl.addEventListener("dragleave", () => zoneEl.classList.remove("dragover"));
+      zoneEl.addEventListener("drop", (e) => {
+        e.preventDefault();
+        zoneEl.classList.remove("dragover");
+        const id = e.dataTransfer.getData("text/plain");
+        placeChip(id, zoneEl.dataset.tier || null);
+      });
+      zoneEl.addEventListener("click", () => {
+        if (selectedChipId) {
+          placeChip(selectedChipId, zoneEl.dataset.tier || null);
+          selectedChipId = null;
+        }
+      });
+    });
+  }
+
+  async function placeChip(id, tier) {
+    const ch = DATA[homeSide].list.find((c) => c.id === id);
+    if (!ch) return;
+    await castVote(homeSide, ch, tier);
+    renderHome();
+  }
+
+  async function renderHome() {
+    zonePool.querySelectorAll(".chip").forEach((c) => c.remove());
+    document.querySelectorAll("#tier-zones .tier-cards").forEach((c) => (c.innerHTML = ""));
+    for (const ch of DATA[homeSide].list) {
+      const placement = await getMyPlacement(homeSide, ch.id);
+      const chip = makeChip(ch);
+      if (placement) {
+        document.querySelector(`#tier-zones .tier-cards[data-tier="${placement}"]`).appendChild(chip);
+      } else {
+        zonePool.appendChild(chip);
+      }
+    }
+  }
+
+  let homeCountdownTimer = null;
+  async function refreshHomeCountdown() {
+    await maybeAutoFreeze(homeSide);
+    const start = await getCycleStart(homeSide);
+    const update = () => { countdownEl.textContent = formatCountdown(CYCLE_MS - (Date.now() - start)); };
+    update();
+    if (homeCountdownTimer) clearInterval(homeCountdownTimer);
+    homeCountdownTimer = setInterval(update, 1000);
+  }
+
+  async function switchHome(side) {
+    homeSide = side;
+    document.getElementById("tab-killers").classList.toggle("active", side === "killers");
+    document.getElementById("tab-killers").setAttribute("aria-selected", side === "killers");
+    document.getElementById("tab-survivors").classList.toggle("active", side === "survivors");
+    document.getElementById("tab-survivors").setAttribute("aria-selected", side === "survivors");
+    setTheme(DATA[side].theme);
+    await renderHome();
+    if (hasStorage) statusLine.textContent = "Votes synced.";
+    await refreshHomeCountdown();
+  }
+
+  document.getElementById("tab-killers").addEventListener("click", () => switchHome("killers"));
+  document.getElementById("tab-survivors").addEventListener("click", () => switchHome("survivors"));
+
+  // ============ TIER LIST VIEW: read-only results ============
+  let tlSide = "killers";
+  const container = document.getElementById("tier-container");
+  const tlStatusLine = document.getElementById("tl-status-line");
+  const tlCountdownEl = document.getElementById("tl-countdown");
+
+  if (!hasStorage) {
+    tlStatusLine.textContent = "Demo mode: no shared storage found here, so this board only reflects votes cast in this same open tab.";
+    tlStatusLine.classList.add("warn");
+  }
+
+  async function renderTierlist(side) {
+    setTheme(DATA[side].theme);
+    if (hasStorage) tlStatusLine.textContent = "Loading results…";
+
+    const frozen = await getFrozenResults(side);
+    const buckets = { S: [], A: [], B: [], C: [], D: [] };
+    for (const ch of DATA[side].list) {
+      const f = frozen[ch.id];
+      buckets[f.tier].push({ ch, avg: f.avg });
+    }
+    TIER_ORDER.forEach((t) => buckets[t].sort((a, b) => b.avg - a.avg));
+
+    container.innerHTML = "";
+    TIER_ORDER.forEach((t) => {
+      const row = document.createElement("div");
+      row.className = "tier-row";
+      row.dataset.tier = t;
+      row.innerHTML = `<div class="tier-label">${t}<small>TIER</small></div>`;
+      const cardsWrap = document.createElement("div");
+      cardsWrap.className = "tier-cards";
+      if (buckets[t].length === 0) {
+        cardsWrap.innerHTML = `<span class="empty-tier">— empty —</span>`;
+      } else {
+        buckets[t].forEach(({ ch, avg }) => {
+          const card = document.createElement("div");
+          card.className = "result-card";
+          card.innerHTML = `
+            ${avatarImgHTML(ch, 42)}
+            <div style="min-width:0;">
+              <div class="char-name">${ch.name}</div>
+              <div class="char-role">${ch.role}</div>
+            </div>
+            <div class="char-score">
+              <span class="avg">${avg.toFixed(1)}</span>
+            </div>`;
+          cardsWrap.appendChild(card);
+        });
+      }
+      row.appendChild(cardsWrap);
+      container.appendChild(row);
+    });
+
+    if (hasStorage) tlStatusLine.textContent = "Results synced.";
+  }
+
+  let tlCountdownTimer = null;
+  async function refreshTlCountdown(side) {
+    await maybeAutoFreeze(side);
+    const start = await getCycleStart(side);
+    const update = () => { tlCountdownEl.textContent = formatCountdown(CYCLE_MS - (Date.now() - start)); };
+    update();
+    if (tlCountdownTimer) clearInterval(tlCountdownTimer);
+    tlCountdownTimer = setInterval(update, 1000);
+  }
+
+  async function switchTl(side) {
+    tlSide = side;
+    document.getElementById("tl-tab-killers").classList.toggle("active", side === "killers");
+    document.getElementById("tl-tab-killers").setAttribute("aria-selected", side === "killers");
+    document.getElementById("tl-tab-survivors").classList.toggle("active", side === "survivors");
+    document.getElementById("tl-tab-survivors").setAttribute("aria-selected", side === "survivors");
+    await renderTierlist(side);
+    await refreshTlCountdown(side);
+  }
+
+  document.getElementById("tl-tab-killers").addEventListener("click", () => switchTl("killers"));
+  document.getElementById("tl-tab-survivors").addEventListener("click", () => switchTl("survivors"));
+
+  // ============ VIEW ROUTING (hash-based, one document = one shared storage context) ============
+  const viewHome = document.getElementById("view-home");
+  const viewTierlist = document.getElementById("view-tierlist");
+
+  function routeFromHash() {
+    const h = location.hash.replace("#", "");
+    if (h === "tierlist") {
+      viewHome.style.display = "none";
+      viewTierlist.style.display = "";
+      window.scrollTo(0, 0);
+      switchTl(tlSide);
+    } else {
+      viewHome.style.display = "";
+      viewTierlist.style.display = "none";
+      if (h === "" || h === "home") window.scrollTo(0, 0);
+    }
+  }
+  window.addEventListener("hashchange", routeFromHash);
+
+  buildZones();
+  switchHome("killers").then(routeFromHash);
+
+  // ---- Scroll reveal ----
+  const io = new IntersectionObserver(
+    (entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }),
+    { threshold: 0.15 }
+  );
+  document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+</script>
+
+</body>
+</html>
