@@ -73,26 +73,62 @@ function avatarImgHTML(ch, size) {
 // this file is opened directly as a plain local file — in that
 // case nothing is shared or saved between visits/devices).
 // ============================================================
-const hasStorage = !!(window.storage && window.storage.get && window.storage.set);
-const memStore = {};
+// ============================================================
+// STORAGE
+// Shared data (votes, frozen results, cycle timers) lives in a
+// Supabase table called "site_kv" — this is what makes the Tier
+// List the same for every visitor on a real hosted site.
+// Personal data (which tier YOU dragged a character into) lives
+// in your own browser's localStorage — it's just for showing you
+// your own picks again next time you visit, not shared with anyone.
+// ============================================================
+const SUPABASE_URL = "https://qfevxppkurqbdtdaidtq.supabase.co";
+const SUPABASE_KEY = "sb_publishable_JoQ6KZQjTioykLad8Orl1Q_WbEwLUUD";
+
+const hasStorage = true;
 
 async function sGet(key, shared) {
-  if (!hasStorage) return memStore[key] ?? null;
+  if (!shared) {
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  }
   try {
-    const r = await window.storage.get(key, shared);
-    return r ? r.value : null;
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/site_kv?key=eq.${encodeURIComponent(key)}&select=value`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return rows.length ? rows[0].value : null;
   } catch (e) {
     return null;
   }
 }
+
 async function sSet(key, value, shared) {
-  if (!hasStorage) {
-    memStore[key] = value;
-    return true;
+  if (!shared) {
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
   try {
-    await window.storage.set(key, value, shared);
-    return true;
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/site_kv`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates,return=minimal",
+      },
+      body: JSON.stringify([{ key, value }]),
+    });
+    return res.ok;
   } catch (e) {
     return false;
   }
