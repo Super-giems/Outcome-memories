@@ -1,17 +1,10 @@
-// ============================================================
-// CHARACTER DATA
-// To add a real photo: set img to a path/URL, e.g. "images/shadow.jpg"
-// Leave img empty ("") to use the auto-generated placeholder icon.
-// seed = starting score (1-5) used only for display when a character
-// has 0 votes yet in the current cycle. It is never written to storage.
-// ============================================================
 const DATA = {
   killers: {
     theme: { accent: "#d21f3c", glow: "#ff3b56" },
     list: [
       { id: "k-fleetway", name: "Fleetway", role: "Rushdown juggernaut", seed: 5, img: "" },
       { id: "k-kolossos", name: "Kolossos", role: "Brutal high-damage brawler", seed: 4, img: "" },
-      { id: "k-2011x", name: "2011x", role: "Starter Executioner", seed: 3, img: "2011x.png" },
+      { id: "k-2011x", name: "2011x", role: "Starter Executioner", seed: 3, img: "" },
       { id: "k-tripwire", name: "Tripwire", role: "Traps & bleed damage", seed: 2, img: "" },
     ],
   },
@@ -32,7 +25,7 @@ const DATA = {
 
 const TIER_SCORE = { S: 5, A: 4, B: 3, C: 2, D: 1 };
 const TIER_ORDER = ["S", "A", "B", "C", "D"];
-const CYCLE_MS = 24 * 60 * 60 * 1000; // 24 hours
+const CYCLE_MS = 24 * 60 * 60 * 1000;
 
 function tierFromAvg(avg) {
   if (avg >= 4.5) return "S";
@@ -49,7 +42,6 @@ function colorFor(str) {
   return `hsl(${hue},55%,50%)`;
 }
 
-// Generic "no photo yet" placeholder avatar, no letters, just a silhouette.
 function placeholderAvatar(str) {
   const hex = colorFor(str);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -67,21 +59,6 @@ function avatarImgHTML(ch, size) {
   return `<img class="avatar" style="width:${size}px;height:${size}px;" src="${src}" alt="${ch.name}" onerror="this.onerror=null;this.src='${placeholder}';">`;
 }
 
-// ============================================================
-// STORAGE (works inside Claude artifacts; falls back to an
-// in-memory store if window.storage isn't available, e.g. when
-// this file is opened directly as a plain local file — in that
-// case nothing is shared or saved between visits/devices).
-// ============================================================
-// ============================================================
-// STORAGE
-// Shared data (votes, frozen results, cycle timers) lives in a
-// Supabase table called "site_kv" — this is what makes the Tier
-// List the same for every visitor on a real hosted site.
-// Personal data (which tier YOU dragged a character into) lives
-// in your own browser's localStorage — it's just for showing you
-// your own picks again next time you visit, not shared with anyone.
-// ============================================================
 const SUPABASE_URL = "https://qfevxppkurqbdtdaidtq.supabase.co";
 const SUPABASE_KEY = "sb_publishable_JoQ6KZQjTioykLad8Orl1Q_WbEwLUUD";
 
@@ -144,14 +121,12 @@ async function setAgg(side, id, agg) {
 
 async function getMyPlacement(side, id) {
   const raw = await sGet(`myplacement:${side}:${id}`, false);
-  return raw ? JSON.parse(raw) : null; // null = in the unplaced pool
+  return raw ? JSON.parse(raw) : null;
 }
 async function setMyPlacement(side, id, tier) {
   await sSet(`myplacement:${side}:${id}`, JSON.stringify(tier), false);
 }
 
-// Cast (or change, or remove) your vote for one character.
-// newTier is one of "S"/"A"/"B"/"C"/"D", or null to send it back to the pool.
 async function castVote(side, ch, newTier) {
   const oldTier = await getMyPlacement(side, ch.id);
   const agg = await getAgg(side, ch.id);
@@ -178,11 +153,6 @@ async function getCycleStart(side) {
   return JSON.parse(raw);
 }
 
-// The tier list shown to visitors is a FIXED snapshot, not a live number.
-// Votes keep accumulating in the background (getAgg/castVote), but the
-// tier a character is shown in only changes when we "freeze" a new
-// snapshot — either automatically every 24h, or instantly via the debug
-// button. Nothing about the raw vote totals is reset by this.
 async function freezeSide(side) {
   for (const ch of DATA[side].list) {
     const agg = await getAgg(side, ch.id);
@@ -193,13 +163,11 @@ async function freezeSide(side) {
   await sSet(`cycle-start:${side}`, JSON.stringify(Date.now()), true);
 }
 
-// Makes sure a snapshot exists at all (first time the site is ever used).
 async function ensureFrozenInitialized(side) {
   const first = await sGet(`frozen:${side}:${DATA[side].list[0].id}`, true);
   if (!first) await freezeSide(side);
 }
 
-// Checks the 24h timer and freezes a fresh snapshot if it's overdue.
 async function maybeAutoFreeze(side) {
   await ensureFrozenInitialized(side);
   const start = await getCycleStart(side);
@@ -208,7 +176,6 @@ async function maybeAutoFreeze(side) {
   }
 }
 
-// Reads the current fixed snapshot for every character on a side.
 async function getFrozenResults(side) {
   await maybeAutoFreeze(side);
   const results = {};

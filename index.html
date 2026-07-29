@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rubik+Glitch&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="icon" type="image/png" href="images/favicon.png">
 </head>
 <body>
 
@@ -131,7 +132,6 @@
     document.documentElement.style.setProperty("--accent-glow", theme.glow);
   }
 
-  // ============ HOME VIEW: drag & drop voting ============
   let homeSide = "killers";
   let selectedChipId = null;
   const zonePool = document.getElementById("zone-pool");
@@ -246,7 +246,6 @@
   document.getElementById("tab-killers").addEventListener("click", () => switchHome("killers"));
   document.getElementById("tab-survivors").addEventListener("click", () => switchHome("survivors"));
 
-  // ============ TIER LIST VIEW: read-only results ============
   let tlSide = "killers";
   const container = document.getElementById("tier-container");
   const tlStatusLine = document.getElementById("tl-status-line");
@@ -325,7 +324,6 @@
   document.getElementById("tl-tab-killers").addEventListener("click", () => switchTl("killers"));
   document.getElementById("tl-tab-survivors").addEventListener("click", () => switchTl("survivors"));
 
-  // ============ VIEW ROUTING (hash-based, one document = one shared storage context) ============
   const viewHome = document.getElementById("view-home");
   const viewTierlist = document.getElementById("view-tierlist");
 
@@ -347,7 +345,6 @@
   buildZones();
   switchHome("killers").then(routeFromHash);
 
-  // ---- Scroll reveal ----
   const io = new IntersectionObserver(
     (entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }),
     { threshold: 0.15 }
