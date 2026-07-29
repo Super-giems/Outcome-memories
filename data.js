@@ -11,7 +11,7 @@ const DATA = {
     list: [
       { id: "k-fleetway", name: "Fleetway", role: "Rushdown juggernaut", seed: 5, img: "" },
       { id: "k-kolossos", name: "Kolossos", role: "Brutal high-damage brawler", seed: 4, img: "" },
-      { id: "k-2011x", name: "2011x", role: "Starter Executioner", seed: 3, img: "" },
+      { id: "k-2011x", name: "2011x", role: "Starter Executioner", seed: 3, img: "2011x.png" },
       { id: "k-tripwire", name: "Tripwire", role: "Traps & bleed damage", seed: 2, img: "" },
     ],
   },
