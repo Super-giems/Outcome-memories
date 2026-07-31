@@ -80,7 +80,10 @@
 
   <footer>
     <div>Outcome Memories — fan project. Not affiliated with the game's developers or SEGA.</div>
-    <div class="mono">v0.1</div>
+    <div class="footer-right">
+      <a class="discord-badge" href="https://discord.gg/kx3KAW6Z5y" target="_blank" rel="noopener noreferrer">Join RU Discord</a>
+      <div class="mono">v0.11</div>
+    </div>
   </footer>
 
 </div>
@@ -120,7 +123,10 @@
 
   <footer>
     <div>Outcome Memories — fan project. Not affiliated with the game's developers or SEGA.</div>
-    <div class="mono">v0.1</div>
+    <div class="footer-right">
+      <a class="discord-badge" href="https://discord.gg/kx3KAW6Z5y" target="_blank" rel="noopener noreferrer">Join RU Discord</a>
+      <div class="mono">v0.11</div>
+    </div>
   </footer>
 
 </div>
@@ -222,13 +228,15 @@
   }
 
   let homeCountdownTimer = null;
+  function tickHomeCountdown() {
+    countdownEl.textContent = formatCountdown(getNextResetBoundary() - Date.now());
+  }
   async function refreshHomeCountdown() {
     await maybeAutoFreeze(homeSide);
-    const start = await getCycleStart(homeSide);
-    const update = () => { countdownEl.textContent = formatCountdown(CYCLE_MS - (Date.now() - start)); };
-    update();
+    tickHomeCountdown();
     if (homeCountdownTimer) clearInterval(homeCountdownTimer);
-    homeCountdownTimer = setInterval(update, 1000);
+    homeCountdownTimer = setInterval(tickHomeCountdown, 1000);
+    setInterval(() => maybeAutoFreeze(homeSide), 60000);
   }
 
   async function switchHome(side) {
@@ -302,13 +310,15 @@
   }
 
   let tlCountdownTimer = null;
+  function tickTlCountdown() {
+    tlCountdownEl.textContent = formatCountdown(getNextResetBoundary() - Date.now());
+  }
   async function refreshTlCountdown(side) {
     await maybeAutoFreeze(side);
-    const start = await getCycleStart(side);
-    const update = () => { tlCountdownEl.textContent = formatCountdown(CYCLE_MS - (Date.now() - start)); };
-    update();
+    tickTlCountdown();
     if (tlCountdownTimer) clearInterval(tlCountdownTimer);
-    tlCountdownTimer = setInterval(update, 1000);
+    tlCountdownTimer = setInterval(tickTlCountdown, 1000);
+    setInterval(() => maybeAutoFreeze(side), 60000);
   }
 
   async function switchTl(side) {

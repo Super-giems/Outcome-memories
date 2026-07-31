@@ -14,11 +14,12 @@ const DATA = {
       { id: "s-metal", name: "Metal Sonic", role: "Self-destruct sacrifice", seed: 5, img: "" },
       { id: "s-sonic", name: "Sonic", role: "Balanced all-round speed", seed: 4, img: "" },
       { id: "s-cream", name: "Cream", role: "Healer", seed: 4, img: "" },
-      { id: "s-silver", name: "Silver", role: "Ranged support, telekinetic slows & barriers", seed: 4, img: "" },
+      { id: "s-silver", name: "Silver", role: "Ranged support, telekinetic slows", seed: 4, img: "" },
       { id: "s-eggman", name: "Eggman", role: "Jetpack double jump", seed: 3, img: "" },
       { id: "s-tails", name: "Tails", role: "Flight & support", seed: 2, img: "" },
       { id: "s-knuckles", name: "Knuckles", role: "Wall-breaking shortcuts", seed: 3, img: "" },
       { id: "s-blaze", name: "Blaze", role: "Hit-and-run, fire damage on stunned hits", seed: 3, img: "" },
+      { id: "s-amy", name: "Amy", role: "Close-range hammer control", seed: 3, img: "" },
     ],
   },
 };
@@ -119,38 +120,89 @@ async function setAgg(side, id, agg) {
   await sSet(`agg:${side}:${id}`, JSON.stringify(agg), true);
 }
 
-async function getMyPlacement(side, id) {
-  const raw = await sGet(`myplacement:${side}:${id}`, false);
-  return raw ? JSON.parse(raw) : null;
+function isDampenTrigger(side, votesMap) {
+  const total = DATA[side].list.length;
+  const ids = Object.keys(votesMap);
+  if (ids.length < total) return null;
+  const tiers = Object.values(votesMap);
+  const first = tiers[0];
+  if (!tiers.every((t) => t === first)) return null;
+  if (first !== "S" && first !== "D") return null;
+  return first;
 }
-async function setMyPlacement(side, id, tier) {
-  await sSet(`myplacement:${side}:${id}`, JSON.stringify(tier), false);
+
+function computeContributions(side, votesMap) {
+  const dampTier = isDampenTrigger(side, votesMap);
+  const result = {};
+  for (const id in votesMap) {
+    const tier = votesMap[id];
+    const ch = DATA[side].list.find((c) => c.id === id);
+    if (dampTier) {
+      result[id] = ch.seed + (TIER_SCORE[dampTier] - ch.seed) / 2;
+    } else {
+      result[id] = TIER_SCORE[tier];
+    }
+  }
+  return result;
+}
+
+async function getMyVotesMap(side) {
+  const raw = await sGet(`myvotes:${side}`, false);
+  return raw ? JSON.parse(raw) : {};
+}
+
+async function getMyPlacement(side, id) {
+  const map = await getMyVotesMap(side);
+  return map[id] || null;
 }
 
 async function castVote(side, ch, newTier) {
-  const oldTier = await getMyPlacement(side, ch.id);
-  const agg = await getAgg(side, ch.id);
-  if (oldTier) {
-    agg.sum -= TIER_SCORE[oldTier];
-    agg.count -= 1;
+  const votesMap = await getMyVotesMap(side);
+  const oldContributions = computeContributions(side, votesMap);
+
+  const newVotesMap = { ...votesMap };
+  if (newTier) newVotesMap[ch.id] = newTier;
+  else delete newVotesMap[ch.id];
+
+  const newContributions = computeContributions(side, newVotesMap);
+
+  const affectedIds = new Set([...Object.keys(oldContributions), ...Object.keys(newContributions)]);
+  for (const id of affectedIds) {
+    const oldVal = oldContributions[id];
+    const newVal = newContributions[id];
+    if (oldVal === newVal) continue;
+    const agg = await getAgg(side, id);
+    if (oldVal !== undefined) {
+      agg.sum -= oldVal;
+      agg.count -= 1;
+    }
+    if (newVal !== undefined) {
+      agg.sum += newVal;
+      agg.count += 1;
+    }
+    await setAgg(side, id, agg);
   }
-  if (newTier) {
-    agg.sum += TIER_SCORE[newTier];
-    agg.count += 1;
-  }
-  await setAgg(side, ch.id, agg);
-  await setMyPlacement(side, ch.id, newTier);
-  return agg;
+
+  await sSet(`myvotes:${side}`, JSON.stringify(newVotesMap), false);
+  return newVotesMap;
 }
 
-async function getCycleStart(side) {
-  const raw = await sGet(`cycle-start:${side}`, true);
-  if (!raw) {
-    const now = Date.now();
-    await sSet(`cycle-start:${side}`, JSON.stringify(now), true);
-    return now;
-  }
-  return JSON.parse(raw);
+const RESET_HOUR_UTC = 9;
+
+function getTodayResetUTC() {
+  const now = new Date();
+  return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), RESET_HOUR_UTC, 0, 0, 0);
+}
+
+function getCurrentResetBoundary() {
+  const now = Date.now();
+  let reset = getTodayResetUTC();
+  if (now < reset) reset -= CYCLE_MS;
+  return reset;
+}
+
+function getNextResetBoundary() {
+  return getCurrentResetBoundary() + CYCLE_MS;
 }
 
 async function freezeSide(side) {
@@ -160,7 +212,6 @@ async function freezeSide(side) {
     const tier = tierFromAvg(avg);
     await sSet(`frozen:${side}:${ch.id}`, JSON.stringify({ tier, avg, count: agg.count }), true);
   }
-  await sSet(`cycle-start:${side}`, JSON.stringify(Date.now()), true);
 }
 
 async function ensureFrozenInitialized(side) {
@@ -170,9 +221,12 @@ async function ensureFrozenInitialized(side) {
 
 async function maybeAutoFreeze(side) {
   await ensureFrozenInitialized(side);
-  const start = await getCycleStart(side);
-  if (Date.now() - start >= CYCLE_MS) {
+  const boundary = getCurrentResetBoundary();
+  const raw = await sGet(`reset-boundary:${side}`, true);
+  const last = raw ? JSON.parse(raw) : 0;
+  if (last < boundary) {
     await freezeSide(side);
+    await sSet(`reset-boundary:${side}`, JSON.stringify(boundary), true);
   }
 }
 
