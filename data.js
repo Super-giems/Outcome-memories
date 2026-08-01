@@ -22,18 +22,76 @@ const DATA = {
       { id: "s-amy", name: "Amy", role: "Close-range hammer control", seed: 3, img: "" },
     ],
   },
+  MAP: {
+    theme: { accent: "#3aa0ff", glow: "#7dc4ff" },
+    list: [
+      { id: "map-hillgym", name: "HILL.GYM", role: "Complex multi-level fortress", seed: 5, img: "" },
+      { id: "map-angelisland", name: "Angel Island", role: "Jungle & shrine layout", seed: 4, img: "" },
+      { id: "map-ycr", name: "You Can't Run", role: "Tight chase corridors", seed: 4, img: "" },
+      { id: "map-notperfect", name: "Not Perfect", role: "Distorted glitch zone", seed: 3, img: "" },
+      { id: "map-greenhill", name: "Green Hill", role: "Classic opening zone", seed: 2, img: "" },
+      { id: "map-mysticcave", name: "Mystic Cave", role: "Dark underground maze", seed: 1, img: "" },
+    ],
+  },
+  LMS: {
+    theme: { accent: "#f2c14e", glow: "#ffd873" },
+    list: [
+      { id: "s-metal", name: "Metal Sonic", role: "Self-destruct sacrifice", seed: 5, img: "" },
+      { id: "s-cream", name: "Cream", role: "Healer", seed: 5, img: "" },
+      { id: "s-sonic", name: "Sonic", role: "Balanced all-round speed", seed: 4, img: "" },
+      { id: "s-eggman", name: "Eggman", role: "Jetpack double jump", seed: 4, img: "" },
+      { id: "s-blaze", name: "Blaze", role: "Hit-and-run, fire damage on stunned hits", seed: 4, img: "" },
+      { id: "s-knuckles", name: "Knuckles", role: "Wall-breaking shortcuts", seed: 3, img: "" },
+      { id: "s-tails", name: "Tails", role: "Flight & support", seed: 3, img: "" },
+      { id: "s-silver", name: "Silver", role: "Ranged support, telekinetic slows", seed: 3, img: "" },
+      { id: "s-amy", name: "Amy", role: "Close-range hammer control", seed: 2, img: "" },
+    ],
+  },
+  panel: {
+    theme: { accent: "#a855f7", glow: "#c084fc" },
+    list: [
+      { id: "p-supersonic", name: "Super Sonic", role: "", seed: 3, img: "" },
+      { id: "p-chara", name: "Chara", role: "", seed: 3, img: "" },
+      { id: "p-baldi", name: "Baldi", role: "", seed: 3, img: "" },
+      { id: "p-bear5", name: "Bear5", role: "", seed: 3, img: "" },
+      { id: "p-sans", name: "Sans", role: "", seed: 3, img: "" },
+      { id: "p-meowl", name: "Meowl", role: "", seed: 3, img: "" },
+      { id: "p-clover", name: "Clover", role: "", seed: 3, img: "" },
+      { id: "p-steve", name: "Steve", role: "", seed: 3, img: "" },
+      { id: "p-cream", name: "Cream", role: "", seed: 3, img: "" },
+      { id: "p-v1", name: "V1", role: "", seed: 3, img: "" },
+      { id: "p-neometalsonic", name: "Neo Metal Sonic", role: "", seed: 3, img: "" },
+    ],
+  },
 };
 
-const TIER_SCORE = { S: 5, A: 4, B: 3, C: 2, D: 1 };
-const TIER_ORDER = ["S", "A", "B", "C", "D"];
+const TIER_SCHEMES = {
+  default: ["S", "A", "B", "C", "D"],
+  panel: ["OP", "SS+", "S+", "S", "A"],
+};
+
+function schemeForSide(side) {
+  return side === "panel" ? "panel" : "default";
+}
+
+function tierOrderFor(side) {
+  return TIER_SCHEMES[schemeForSide(side)];
+}
+
+function tierScoreFor(side, label) {
+  const order = tierOrderFor(side);
+  return 5 - order.indexOf(label);
+}
+
 const CYCLE_MS = 24 * 60 * 60 * 1000;
 
-function tierFromAvg(avg) {
-  if (avg >= 4.5) return "S";
-  if (avg >= 3.5) return "A";
-  if (avg >= 2.5) return "B";
-  if (avg >= 1.5) return "C";
-  return "D";
+function tierFromAvg(side, avg) {
+  const order = tierOrderFor(side);
+  if (avg >= 4.5) return order[0];
+  if (avg >= 3.5) return order[1];
+  if (avg >= 2.5) return order[2];
+  if (avg >= 1.5) return order[3];
+  return order[4];
 }
 
 function colorFor(str) {
@@ -53,11 +111,19 @@ function placeholderAvatar(str) {
   return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
 }
 
-function avatarImgHTML(ch, size) {
-  const autoPath = "images/" + encodeURIComponent(ch.name) + ".png";
+function folderForSide(side) {
+  if (side === "MAP") return "maps";
+  if (side === "panel") return "characters/panel";
+  return "characters";
+}
+
+function avatarImgHTML(ch, side, width, height) {
+  const folder = folderForSide(side);
+  const autoPath = `images/${folder}/` + encodeURIComponent(ch.name) + ".png";
   const src = ch.img || autoPath;
   const placeholder = placeholderAvatar(ch.name);
-  return `<img class="avatar" style="width:${size}px;height:${size}px;" src="${src}" alt="${ch.name}" onerror="this.onerror=null;this.src='${placeholder}';">`;
+  const h = height || width;
+  return `<img class="avatar" style="width:${width}px;height:${h}px;" src="${src}" alt="${ch.name}" onerror="this.onerror=null;this.src='${placeholder}';">`;
 }
 
 const SUPABASE_URL = "https://qfevxppkurqbdtdaidtq.supabase.co";
@@ -121,13 +187,16 @@ async function setAgg(side, id, agg) {
 }
 
 function isDampenTrigger(side, votesMap) {
+  const order = tierOrderFor(side);
+  const best = order[0];
+  const worst = order[order.length - 1];
   const total = DATA[side].list.length;
   const ids = Object.keys(votesMap);
   if (ids.length < total) return null;
   const tiers = Object.values(votesMap);
   const first = tiers[0];
   if (!tiers.every((t) => t === first)) return null;
-  if (first !== "S" && first !== "D") return null;
+  if (first !== best && first !== worst) return null;
   return first;
 }
 
@@ -137,10 +206,12 @@ function computeContributions(side, votesMap) {
   for (const id in votesMap) {
     const tier = votesMap[id];
     const ch = DATA[side].list.find((c) => c.id === id);
+    if (!ch) continue;
     if (dampTier) {
-      result[id] = ch.seed + (TIER_SCORE[dampTier] - ch.seed) / 2;
+      const dampScore = tierScoreFor(side, dampTier);
+      result[id] = ch.seed + (dampScore - ch.seed) / 2;
     } else {
-      result[id] = TIER_SCORE[tier];
+      result[id] = tierScoreFor(side, tier);
     }
   }
   return result;
@@ -148,7 +219,12 @@ function computeContributions(side, votesMap) {
 
 async function getMyVotesMap(side) {
   const raw = await sGet(`myvotes:${side}`, false);
-  return raw ? JSON.parse(raw) : {};
+  const map = raw ? JSON.parse(raw) : {};
+  const valid = {};
+  for (const id in map) {
+    if (DATA[side].list.some((c) => c.id === id)) valid[id] = map[id];
+  }
+  return valid;
 }
 
 async function getMyPlacement(side, id) {
@@ -209,7 +285,7 @@ async function freezeSide(side) {
   for (const ch of DATA[side].list) {
     const agg = await getAgg(side, ch.id);
     const avg = agg.count > 0 ? agg.sum / agg.count : ch.seed;
-    const tier = tierFromAvg(avg);
+    const tier = tierFromAvg(side, avg);
     await sSet(`frozen:${side}:${ch.id}`, JSON.stringify({ tier, avg, count: agg.count }), true);
   }
 }
@@ -235,7 +311,7 @@ async function getFrozenResults(side) {
   const results = {};
   for (const ch of DATA[side].list) {
     const raw = await sGet(`frozen:${side}:${ch.id}`, true);
-    results[ch.id] = raw ? JSON.parse(raw) : { tier: tierFromAvg(ch.seed), avg: ch.seed, count: 0 };
+    results[ch.id] = raw ? JSON.parse(raw) : { tier: tierFromAvg(side, ch.seed), avg: ch.seed, count: 0 };
   }
   return results;
 }

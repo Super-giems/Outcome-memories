@@ -4,11 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OUTCOME MEMORIES — Fan Hub</title>
+<meta property="og:type" content="website">
+<meta property="og:title" content="Outcome Memories — Fan Hub">
+<meta property="og:description" content="Community tier list for Outcome Memories on Roblox. Vote on Executioners and Survivors yourself.">
+<meta property="og:image" content="REPLACE_WITH_FULL_URL/images/banner.png">
+<meta property="og:url" content="REPLACE_WITH_FULL_SITE_URL">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Outcome Memories — Fan Hub">
+<meta name="twitter:description" content="Community tier list for Outcome Memories on Roblox.">
+<meta name="twitter:image" content="REPLACE_WITH_FULL_URL/images/banner.png">
+<meta name="theme-color" content="#d21f3c">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rubik+Glitch&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
-<link rel="icon" type="image/png" href="images/favicon.png">
+<link rel="icon" type="image/png" href="images/siteIcon.png">
 </head>
 <body>
 
@@ -56,25 +66,33 @@
         <div class="section-tag mono">COMMUNITY VOTE</div>
         <h2 class="section-title">Rank Them Yourself</h2>
       </div>
-      <div class="tabs" role="tablist" aria-label="Choose side">
-        <button class="tab-btn active" id="tab-killers" role="tab" aria-selected="true">Executioners</button>
-        <button class="tab-btn" id="tab-survivors" role="tab" aria-selected="false">Survivors</button>
-      </div>
+      <div class="tabs" role="tablist" aria-label="Choose side" id="home-tabs"></div>
     </div>
 
     <div class="status-line mono" id="status-line">Loading votes…</div>
 
     <p class="rank-hint">Drag a character card into a tier below — that's your vote. Drag it back to "Unplaced" to remove your vote, or drag it to a different tier anytime to change your mind. On touch devices: tap a card to pick it up, then tap a tier to drop it there.</p>
 
-    <div class="pool-zone" id="zone-pool" data-tier="">
-      <div class="pool-label mono">UNPLACED</div>
-    </div>
+    <div class="board-wrap" id="home-board">
+      <div class="board-content">
+        <div class="pool-zone" id="zone-pool" data-tier="">
+          <div class="pool-label mono">UNPLACED</div>
+        </div>
 
-    <div class="tier-zones" id="tier-zones"></div>
+        <div class="tier-zones" id="tier-zones"></div>
+      </div>
+      <div class="board-spinner"><div class="spinner"></div></div>
+    </div>
 
     <div class="timer-row" style="margin-top:26px;">
       <span class="timer-label mono">TIER LIST PAGE AUTO-UPDATES IN</span>
       <span class="timer-value mono" id="countdown">--:--:--</span>
+    </div>
+
+    <div class="tabs category-tabs">
+      <button class="tab-btn" id="cat-maps-home">Maps</button>
+      <button class="tab-btn" id="cat-lms-home">LMS</button>
+      <button class="tab-btn" id="cat-panel-home">Panel</button>
     </div>
   </section>
 
@@ -82,7 +100,7 @@
     <div>Outcome Memories — fan project. Not affiliated with the game's developers or SEGA.</div>
     <div class="footer-right">
       <a class="discord-badge" href="https://discord.gg/kx3KAW6Z5y" target="_blank" rel="noopener noreferrer">Join RU Discord</a>
-      <div class="mono">v0.11</div>
+      <div class="mono">v0.12</div>
     </div>
   </footer>
 
@@ -103,10 +121,7 @@
         <div class="section-tag mono">CURRENT CYCLE</div>
         <h2 class="section-title">Standings</h2>
       </div>
-      <div class="tabs" role="tablist" aria-label="Choose side">
-        <button class="tab-btn active" id="tl-tab-killers" role="tab" aria-selected="true">Executioners</button>
-        <button class="tab-btn" id="tl-tab-survivors" role="tab" aria-selected="false">Survivors</button>
-      </div>
+      <div class="tabs" role="tablist" aria-label="Choose side" id="tl-tabs"></div>
     </div>
 
     <div class="timer-row">
@@ -114,9 +129,20 @@
       <span class="timer-value mono" id="tl-countdown">--:--:--</span>
     </div>
 
+    <div class="tabs category-tabs">
+      <button class="tab-btn" id="cat-maps-tl">Maps</button>
+      <button class="tab-btn" id="cat-lms-tl">LMS</button>
+      <button class="tab-btn" id="cat-panel-tl">Panel</button>
+    </div>
+
     <div class="status-line mono" id="tl-status-line">Loading results…</div>
 
-    <div id="tier-container"></div>
+    <div class="board-wrap" id="tl-board">
+      <div class="board-content">
+        <div id="tier-container"></div>
+      </div>
+      <div class="board-spinner"><div class="spinner"></div></div>
+    </div>
 
     <a class="back-cta" href="#home">Back to Home</a>
   </section>
@@ -125,7 +151,7 @@
     <div>Outcome Memories — fan project. Not affiliated with the game's developers or SEGA.</div>
     <div class="footer-right">
       <a class="discord-badge" href="https://discord.gg/kx3KAW6Z5y" target="_blank" rel="noopener noreferrer">Join RU Discord</a>
-      <div class="mono">v0.11</div>
+      <div class="mono">v0.12</div>
     </div>
   </footer>
 
@@ -139,6 +165,7 @@
   }
 
   let homeSide = "killers";
+  let homeToken = 0;
   let selectedChipId = null;
   const zonePool = document.getElementById("zone-pool");
   const zonesContainer = document.getElementById("tier-zones");
@@ -151,24 +178,25 @@
     statusLine.classList.add("warn");
   }
 
-  function buildZones() {
+  function buildZones(side) {
     zonesContainer.innerHTML = "";
-    TIER_ORDER.forEach((t) => {
+    tierOrderFor(side).forEach((t, idx) => {
       const row = document.createElement("div");
       row.className = "drop-zone";
       row.dataset.tier = t;
-      row.innerHTML = `<div class="tier-label">${t}<small>TIER</small></div><div class="tier-cards" data-tier="${t}"></div>`;
+      row.innerHTML = `<div class="tier-label tier-rank-${idx}">${t}<small>TIER</small></div><div class="tier-cards" data-tier="${t}"></div>`;
       zonesContainer.appendChild(row);
     });
     attachZoneEvents();
   }
 
-  function makeChip(ch) {
+  function makeChip(ch, side) {
     const chip = document.createElement("div");
     chip.className = "chip";
     chip.draggable = !isTouchDevice;
     chip.dataset.id = ch.id;
-    chip.innerHTML = `${avatarImgHTML(ch, 36)}<span class="chip-name">${ch.name}</span>`;
+    const avatarHTML = side === "MAP" ? avatarImgHTML(ch, side, 54, 32) : avatarImgHTML(ch, side, 36, 36);
+    chip.innerHTML = `${avatarHTML}<span class="chip-name">${ch.name}</span>`;
     if (!isTouchDevice) {
       chip.addEventListener("dragstart", (e) => {
         e.dataTransfer.setData("text/plain", ch.id);
@@ -210,21 +238,23 @@
     const ch = DATA[homeSide].list.find((c) => c.id === id);
     if (!ch) return;
     await castVote(homeSide, ch, tier);
-    renderHome();
+    renderHome(homeSide, homeToken);
   }
 
-  async function renderHome() {
+  async function renderHome(side, token) {
+    const placements = await Promise.all(DATA[side].list.map((ch) => getMyPlacement(side, ch.id)));
+    if (token !== homeToken) return;
     zonePool.querySelectorAll(".chip").forEach((c) => c.remove());
     document.querySelectorAll("#tier-zones .tier-cards").forEach((c) => (c.innerHTML = ""));
-    for (const ch of DATA[homeSide].list) {
-      const placement = await getMyPlacement(homeSide, ch.id);
-      const chip = makeChip(ch);
+    DATA[side].list.forEach((ch, i) => {
+      const placement = placements[i];
+      const chip = makeChip(ch, side);
       if (placement) {
         document.querySelector(`#tier-zones .tier-cards[data-tier="${placement}"]`).appendChild(chip);
       } else {
         zonePool.appendChild(chip);
       }
-    }
+    });
   }
 
   let homeCountdownTimer = null;
@@ -239,20 +269,38 @@
     setInterval(() => maybeAutoFreeze(homeSide), 60000);
   }
 
+  function renderHomeTabs() {
+    const container = document.getElementById("home-tabs");
+    if (homeSide === "killers" || homeSide === "survivors") {
+      container.innerHTML = `
+        <button class="tab-btn ${homeSide === "killers" ? "active" : ""}" id="tab-killers">Executioners</button>
+        <button class="tab-btn ${homeSide === "survivors" ? "active" : ""}" id="tab-survivors">Survivors</button>
+      `;
+      document.getElementById("tab-killers").addEventListener("click", () => switchHome("killers"));
+      document.getElementById("tab-survivors").addEventListener("click", () => switchHome("survivors"));
+    } else {
+      container.innerHTML = `<button class="tab-btn active" id="tab-back-default">Tier List</button>`;
+      document.getElementById("tab-back-default").addEventListener("click", () => switchHome("killers"));
+    }
+  }
+
   async function switchHome(side) {
+    const token = ++homeToken;
     homeSide = side;
-    document.getElementById("tab-killers").classList.toggle("active", side === "killers");
-    document.getElementById("tab-killers").setAttribute("aria-selected", side === "killers");
-    document.getElementById("tab-survivors").classList.toggle("active", side === "survivors");
-    document.getElementById("tab-survivors").setAttribute("aria-selected", side === "survivors");
+    renderHomeTabs();
     setTheme(DATA[side].theme);
-    await renderHome();
+    buildZones(side);
+    document.getElementById("home-board").classList.add("loading");
+    await renderHome(side, token);
+    if (token !== homeToken) return;
+    document.getElementById("home-board").classList.remove("loading");
     if (hasStorage) statusLine.textContent = "Votes synced.";
     await refreshHomeCountdown();
   }
 
-  document.getElementById("tab-killers").addEventListener("click", () => switchHome("killers"));
-  document.getElementById("tab-survivors").addEventListener("click", () => switchHome("survivors"));
+  document.getElementById("cat-maps-home").addEventListener("click", () => switchHome("MAP"));
+  document.getElementById("cat-lms-home").addEventListener("click", () => switchHome("LMS"));
+  document.getElementById("cat-panel-home").addEventListener("click", () => switchHome("panel"));
 
   let tlSide = "killers";
   const container = document.getElementById("tier-container");
@@ -264,24 +312,27 @@
     tlStatusLine.classList.add("warn");
   }
 
-  async function renderTierlist(side) {
+  async function renderTierlist(side, token) {
     setTheme(DATA[side].theme);
     if (hasStorage) tlStatusLine.textContent = "Loading results…";
 
+    const order = tierOrderFor(side);
     const frozen = await getFrozenResults(side);
-    const buckets = { S: [], A: [], B: [], C: [], D: [] };
+    if (token !== tlToken) return;
+    const buckets = {};
+    order.forEach((t) => (buckets[t] = []));
     for (const ch of DATA[side].list) {
       const f = frozen[ch.id];
       buckets[f.tier].push({ ch, avg: f.avg });
     }
-    TIER_ORDER.forEach((t) => buckets[t].sort((a, b) => b.avg - a.avg));
+    order.forEach((t) => buckets[t].sort((a, b) => b.avg - a.avg));
 
     container.innerHTML = "";
-    TIER_ORDER.forEach((t) => {
+    order.forEach((t, idx) => {
       const row = document.createElement("div");
       row.className = "tier-row";
       row.dataset.tier = t;
-      row.innerHTML = `<div class="tier-label">${t}<small>TIER</small></div>`;
+      row.innerHTML = `<div class="tier-label tier-rank-${idx}">${t}<small>TIER</small></div>`;
       const cardsWrap = document.createElement("div");
       cardsWrap.className = "tier-cards";
       if (buckets[t].length === 0) {
@@ -290,8 +341,9 @@
         buckets[t].forEach(({ ch, avg }) => {
           const card = document.createElement("div");
           card.className = "result-card";
+          const avatarHTML = side === "MAP" ? avatarImgHTML(ch, side, 64, 38) : avatarImgHTML(ch, side, 42, 42);
           card.innerHTML = `
-            ${avatarImgHTML(ch, 42)}
+            ${avatarHTML}
             <div style="min-width:0;">
               <div class="char-name">${ch.name}</div>
               <div class="char-role">${ch.role}</div>
@@ -321,18 +373,36 @@
     setInterval(() => maybeAutoFreeze(side), 60000);
   }
 
+  function renderTlTabs() {
+    const container = document.getElementById("tl-tabs");
+    if (tlSide === "killers" || tlSide === "survivors") {
+      container.innerHTML = `
+        <button class="tab-btn ${tlSide === "killers" ? "active" : ""}" id="tl-tab-killers">Executioners</button>
+        <button class="tab-btn ${tlSide === "survivors" ? "active" : ""}" id="tl-tab-survivors">Survivors</button>
+      `;
+      document.getElementById("tl-tab-killers").addEventListener("click", () => switchTl("killers"));
+      document.getElementById("tl-tab-survivors").addEventListener("click", () => switchTl("survivors"));
+    } else {
+      container.innerHTML = `<button class="tab-btn active" id="tl-tab-back-default">Tier List</button>`;
+      document.getElementById("tl-tab-back-default").addEventListener("click", () => switchTl("killers"));
+    }
+  }
+
+  let tlToken = 0;
   async function switchTl(side) {
+    const token = ++tlToken;
     tlSide = side;
-    document.getElementById("tl-tab-killers").classList.toggle("active", side === "killers");
-    document.getElementById("tl-tab-killers").setAttribute("aria-selected", side === "killers");
-    document.getElementById("tl-tab-survivors").classList.toggle("active", side === "survivors");
-    document.getElementById("tl-tab-survivors").setAttribute("aria-selected", side === "survivors");
-    await renderTierlist(side);
+    renderTlTabs();
+    document.getElementById("tl-board").classList.add("loading");
+    await renderTierlist(side, token);
+    if (token !== tlToken) return;
+    document.getElementById("tl-board").classList.remove("loading");
     await refreshTlCountdown(side);
   }
 
-  document.getElementById("tl-tab-killers").addEventListener("click", () => switchTl("killers"));
-  document.getElementById("tl-tab-survivors").addEventListener("click", () => switchTl("survivors"));
+  document.getElementById("cat-maps-tl").addEventListener("click", () => switchTl("MAP"));
+  document.getElementById("cat-lms-tl").addEventListener("click", () => switchTl("LMS"));
+  document.getElementById("cat-panel-tl").addEventListener("click", () => switchTl("panel"));
 
   const viewHome = document.getElementById("view-home");
   const viewTierlist = document.getElementById("view-tierlist");
@@ -352,7 +422,6 @@
   }
   window.addEventListener("hashchange", routeFromHash);
 
-  buildZones();
   switchHome("killers").then(routeFromHash);
 
   const io = new IntersectionObserver(
