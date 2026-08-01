@@ -128,6 +128,8 @@ function avatarImgHTML(ch, side, width, height) {
 
 const SUPABASE_URL = "https://qfevxppkurqbdtdaidtq.supabase.co";
 const SUPABASE_KEY = "sb_publishable_JoQ6KZQjTioykLad8Orl1Q_WbEwLUUD";
+const TABLE_NAME = "Outcome Memories voites";
+const TABLE_PATH = encodeURIComponent(TABLE_NAME);
 
 const hasStorage = true;
 
@@ -141,7 +143,7 @@ async function sGet(key, shared) {
   }
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/site_kv?key=eq.${encodeURIComponent(key)}&select=value`,
+      `${SUPABASE_URL}/rest/v1/${TABLE_PATH}?key=eq.${encodeURIComponent(key)}&select=value`,
       { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
     );
     if (!res.ok) return null;
@@ -162,7 +164,7 @@ async function sSet(key, value, shared) {
     }
   }
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/site_kv`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_PATH}`, {
       method: "POST",
       headers: {
         apikey: SUPABASE_KEY,
